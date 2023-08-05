@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block body %}
+<div class="header">
+    <h1>Cars Detection</h1>
+</div>
+<div class="wrapper">
+    <div class="left-content">
+        <div class="content-header">
+            <span>Thêm video</span>
+        </div>
+        <div class="left-content-body">
+            <form id="image-form" action="/predict" method="post" enctype="multipart/form-data" class="file-form">
+                <input type="file" id="video-input" accept="video/*" name="file">
+                <button type="submit" class="predict-btn hide">Dự đoán</button>
+                <div class="loader-wrapper">
+                </div>
+            </form>
+            <div class="video-wrapper">
+                <video id="video" width="480" height="270" autoplay class="video"></video>
+            </div>
+        </div>
+    </div>
+    <div class="right-content">
+        <div class="content-header">
+            <span>Kết quả</span>
+        </div>
+        <div class="result-wrapper">
+            <video id="result-video" muted controls class="result-video">
+            </video>
+        </div>
+    </div>
+    <div id="result"></div>
+</div>
+<script>
+    const videoElement = document.getElementById("video");
+    const predictBtn = document.querySelector('.predict-btn');
+
+    document.getElementById("video-input").addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            videoElement.src = URL.createObjectURL(file);
+            predictBtn.classList.remove('hide');
+        } else {
+            videoElement.pause();
+            videoElement.removeAttribute('src');
+            videoElement.load();
+            predictBtn.classList.add('hide');
+        }
+    });
+    
+    document.getElementById("image-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const loaderWrapper = document.querySelector('.loader-wrapper');
+        const loader = document.querySelector('.loader');
+        if (loader) {
+            loader.remove();
+        }
+        const loaderElement = document.createElement('div');
+        loaderElement.className = 'loader';
+        loaderWrapper.appendChild(loaderElement);
+        predictBtn.classList.add('hide');
+
+        const formData = new FormData(this);
+
+        fetch("/predict", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.blob())
+        .then(data => {
+            const video = document.getElementById("result-video");
+            const videoUrl = URL.createObjectURL(data);
+            video.src = videoUrl;
+            loaderElement.remove();
+            predictBtn.classList.remove('hide');
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
+{% endblock %}
