@@ -1,0 +1,1 @@
+web: gunicorn cars-detection:app --log-file -
